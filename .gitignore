@@ -1,6 +1,5 @@
 # Python-generated files
 __pycache__/
-*.py[oc]
 build/
 dist/
 wheels/
@@ -8,3 +7,14 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Image files
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.tif
+*.svg
+*.webp
+*.ico
