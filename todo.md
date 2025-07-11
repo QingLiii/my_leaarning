@@ -8,4 +8,5 @@
 ### 源码在此：https://github.com/cuhksz-nlp/R2Gen?tab=readme-ov-file
 ### 把源码转换成md
 
+## 用自己的代码复现R2Gen这个项目，这个项目的仓库内容源码在“Repository_R2Gen.md"里
 
