@@ -1,301 +1,292 @@
 import tkinter as tk
-import numpy as np
 import math
-import sys
+import random
+import numpy as np
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple
 
-# --- Constants ---
-
-# Window and Canvas Configuration
-WIDTH, HEIGHT = 800, 800
-CANVAS_BG_COLOR = '#1a1a1a'
-UPDATE_DELAY_MS = 10  # Corresponds to ~100 FPS, but actual FPS will be lower
-
-# Simulation Physics Parameters
-DT = 0.04  # Time step for physics integration, adjusted for smooth simulation
-GRAVITY = np.array([0.0, 400.0])  # Gravity vector in pixels/s^2
-HEPTAGON_ROT_SPEED = (2 * math.pi) / 5.0  # rad/s (360 degrees in 5 seconds)
-
-# Heptagon Properties
-HEPTAGON_CENTER = np.array([WIDTH / 2.0, HEIGHT / 2.0])
-HEPTAGON_RADIUS = 360  # Distance from center to vertex
-HEPTAGON_LINE_COLOR = '#ffffff'
-HEPTAGON_LINE_WIDTH = 3
-
-# Ball Properties
+# Constants
 NUM_BALLS = 20
-BALL_RADIUS = 25
-BALL_MASS = 1.0
-BALL_INERTIA = (2/5) * BALL_MASS * (BALL_RADIUS**2) # Moment of inertia for a solid sphere
-BALL_WALL_RESTITUTION = 0.75  # Bounciness off walls
-BALL_BALL_RESTITUTION = 0.9   # Bounciness between balls
-WALL_FRICTION_COEFF = 0.2     # Frictional coefficient with heptagon walls
-BALL_FRICTION_COEFF = 0.1     # Frictional coefficient between balls
+BALL_RADIUS = 15
+HEPTAGON_RADIUS = 300  # Distance from center to vertex
+GRAVITY = 0.5
+FRICTION = 0.98
+ANGULAR_FRICTION = 0.99
+BOUNCE_DAMPING = 0.8
+COLLISION_DAMPING = 0.9
+HEPTAGON_ROTATION_SPEED = 360 / 5  # degrees per second
+FPS = 60
 
-# Colors for the 20 balls as specified
+# Colors
 COLORS = [
-    '#f8b862', '#f6ad49', '#f39800', '#f08300', '#ec6d51', 
-    '#ee7948', '#ed6d3d', '#ec6800', '#ec6800', '#ee7800', 
-    '#eb6238', '#ea5506', '#ea5506', '#eb6101', '#e49e61', 
-    '#e45e32', '#e17b34', '#dd7a56', '#db8449', '#d66a35'
+    "#f8b862", "#f6ad49", "#f39800", "#f08300", "#ec6d51",
+    "#ee7948", "#ed6d3d", "#ec6800", "#ec6800", "#ee7800",
+    "#eb6238", "#ea5506", "#ea5506", "#eb6101", "#e49e61",
+    "#e45e32", "#e17b34", "#dd7a56", "#db8449", "#d66a35"
 ]
 
-# --- Data Class for Ball State ---
-
 @dataclass
+class Vector2:
+    x: float
+    y: float
+    
+    def __add__(self, other):
+        return Vector2(self.x + other.x, self.y + other.y)
+    
+    def __sub__(self, other):
+        return Vector2(self.x - other.x, self.y - other.y)
+    
+    def __mul__(self, scalar):
+        return Vector2(self.x * scalar, self.y * scalar)
+    
+    def __rmul__(self, scalar):
+        return self.__mul__(scalar)
+    
+    def dot(self, other):
+        return self.x * other.x + self.y * other.y
+    
+    def length(self):
+        return math.sqrt(self.x**2 + self.y**2)
+    
+    def normalize(self):
+        l = self.length()
+        if l == 0:
+            return Vector2(0, 0)
+        return Vector2(self.x/l, self.y/l)
+    
+    def rotate(self, angle):
+        rad = math.radians(angle)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+        return Vector2(
+            self.x * cos_a - self.y * sin_a,
+            self.x * sin_a + self.y * cos_a
+        )
+
 class Ball:
-    """Holds all state and properties for a single ball."""
-    # Physical properties
-    number: int
-    radius: float
-    mass: float
-    inertia: float
-    color: str
+    def __init__(self, number: int, color: str, position: Vector2):
+        self.number = number
+        self.color = color
+        self.position = position
+        self.velocity = Vector2(random.uniform(-2, 2), random.uniform(-2, 2))
+        self.angular_velocity = random.uniform(-5, 5)
+        self.rotation = 0
     
-    # State variables
-    position: np.ndarray
-    velocity: np.ndarray
-    angle: float = 0.0
-    angular_velocity: float = 0.0
+    def update(self, dt: float):
+        # Apply gravity
+        self.velocity.y += GRAVITY * dt
+        
+        # Apply friction
+        self.velocity = self.velocity * FRICTION
+        
+        # Update rotation
+        self.angular_velocity *= ANGULAR_FRICTION
+        self.rotation += self.angular_velocity * dt
+        
+        # Update position
+        self.position = self.position + self.velocity * dt
     
-    # Tkinter canvas object IDs
-    canvas_id: int = None
-    text_id: int = None
-
-# --- Main Simulation Class ---
-
-class HeptagonBounceSimulation:
-    """Manages the simulation, including Tkinter setup, physics, and rendering."""
-
-    def __init__(self, root: tk.Tk):
-        """Initializes the simulation environment."""
-        self.root = root
-        self.root.title("Bouncing Balls in a Spinning Heptagon")
+    def draw(self, canvas: tk.Canvas):
+        x, y = self.position.x, self.position.y
+        canvas.create_oval(
+            x - BALL_RADIUS, y - BALL_RADIUS,
+            x + BALL_RADIUS, y + BALL_RADIUS,
+            fill=self.color, outline="black"
+        )
         
-        # Set up the canvas
-        self.canvas = tk.Canvas(root, width=WIDTH, height=HEIGHT, bg=CANVAS_BG_COLOR)
-        self.canvas.pack()
-
-        # Initialize simulation state
-        self.heptagon_angle = 0.0
-        self.heptagon_vertices = self._calculate_heptagon_vertices()
-        self.heptagon_canvas_id = None
+        # Draw number
+        canvas.create_text(
+            x, y,
+            text=str(self.number),
+            font=("Arial", 12, "bold"),
+            fill="white"
+        )
         
-        self.balls: List[Ball] = self._create_balls()
-        
-        # Create canvas objects for the first time
-        self._draw_heptagon()
-        self._create_ball_canvas_objects()
+        # Draw rotation indicator (a small line from center to edge)
+        indicator = Vector2(BALL_RADIUS - 5, 0).rotate(self.rotation)
+        canvas.create_line(
+            x, y,
+            x + indicator.x, y + indicator.y,
+            fill="white", width=2
+        )
 
-        # Start the main simulation loop
-        self.animate()
-
-    def _create_balls(self) -> List[Ball]:
-        """Creates the initial list of Ball objects."""
-        balls = []
-        for i in range(NUM_BALLS):
-            # Start all balls at the center. A tiny random offset prevents perfect symmetry issues.
-            offset = (np.random.rand(2) - 0.5) * 0.1
-            ball = Ball(
-                number=i + 1,
-                radius=BALL_RADIUS,
-                mass=BALL_MASS,
-                inertia=BALL_INERTIA,
-                color=COLORS[i % len(COLORS)],
-                position=HEPTAGON_CENTER + offset,
-                velocity=np.array([0.0, 0.0])
-            )
-            balls.append(ball)
-        return balls
-
-    def _calculate_heptagon_vertices(self) -> List[np.ndarray]:
-        """Calculates the 7 vertex coordinates of the heptagon based on its current angle."""
+class Heptagon:
+    def __init__(self, center: Vector2, radius: float):
+        self.center = center
+        self.radius = radius
+        self.rotation = 0
+    
+    def get_vertices(self) -> List[Vector2]:
         vertices = []
         for i in range(7):
-            angle = (2 * math.pi * i / 7) + self.heptagon_angle
-            x = HEPTAGON_CENTER[0] + HEPTAGON_RADIUS * math.cos(angle)
-            y = HEPTAGON_CENTER[1] + HEPTAGON_RADIUS * math.sin(angle)
-            vertices.append(np.array([x, y]))
+            angle = math.radians(360/7 * i + self.rotation)
+            x = self.center.x + self.radius * math.cos(angle)
+            y = self.center.y + self.radius * math.sin(angle)
+            vertices.append(Vector2(x, y))
         return vertices
-
-    def _update_physics(self):
-        """Applies physics rules to all balls for one time step."""
-        # Update heptagon rotation
-        self.heptagon_angle += HEPTAGON_ROT_SPEED * DT
-        self.heptagon_vertices = self._calculate_heptagon_vertices()
-
-        # Update each ball's state
-        for ball in self.balls:
-            # Apply gravity
-            ball.velocity += GRAVITY * DT
-            # Update position and rotation
-            ball.position += ball.velocity * DT
-            ball.angle += ball.angular_velocity * DT
-
-        # Handle collisions with multiple passes for stability
-        for _ in range(3): # Iterative solver for collisions
-            # Ball-to-wall collisions
-            for ball in self.balls:
-                self._handle_wall_collisions(ball)
-            
-            # Ball-to-ball collisions
-            for i in range(len(self.balls)):
-                for j in range(i + 1, len(self.balls)):
-                    self._handle_ball_collisions(self.balls[i], self.balls[j])
-
-    def _handle_wall_collisions(self, ball: Ball):
-        """Detects and resolves collisions between a ball and the heptagon walls."""
+    
+    def get_edges(self) -> List[Tuple[Vector2, Vector2]]:
+        vertices = self.get_vertices()
+        edges = []
         for i in range(7):
-            p1 = self.heptagon_vertices[i]
-            p2 = self.heptagon_vertices[(i + 1) % 7]
+            edges.append((vertices[i], vertices[(i+1)%7]))
+        return edges
+    
+    def get_normal(self, edge: Tuple[Vector2, Vector2]) -> Vector2:
+        p1, p2 = edge
+        edge_vec = p2 - p1
+        normal = Vector2(-edge_vec.y, edge_vec.x).normalize()
+        return normal
+    
+    def check_collision(self, ball: Ball) -> Tuple[bool, Vector2, Vector2]:
+        """Check collision with heptagon walls. Returns (collision, normal, contact_point)"""
+        for edge in self.get_edges():
+            p1, p2 = edge
+            edge_vec = p2 - p1
+            edge_len = edge_vec.length()
+            edge_dir = edge_vec.normalize()
             
-            wall_vec = p2 - p1
-            point_vec = ball.position - p1
+            # Vector from edge start to ball center
+            to_ball = ball.position - p1
             
-            # Project ball's position onto the wall vector to find the closest point
-            t = np.dot(point_vec, wall_vec) / np.dot(wall_vec, wall_vec)
-            t = np.clip(t, 0, 1) # Clamp to the line segment
+            # Projection of to_ball onto edge
+            projection = to_ball.dot(edge_dir)
+            projection = max(0, min(projection, edge_len))
             
-            closest_point = p1 + t * wall_vec
-            collision_vec = ball.position - closest_point
-            distance = np.linalg.norm(collision_vec)
-
-            if distance < ball.radius:
-                # --- Collision Detected ---
-                
-                # 1. Resolve Overlap
-                overlap = ball.radius - distance
-                normal = collision_vec / distance
-                ball.position += normal * overlap
-
-                # 2. Calculate Collision Response (Bounce)
-                # Velocity of the wall at the collision point
-                wall_point_vec = closest_point - HEPTAGON_CENTER
-                wall_velocity = np.array([-wall_point_vec[1], wall_point_vec[0]]) * HEPTAGON_ROT_SPEED
-                
-                relative_velocity = ball.velocity - wall_velocity
-                vel_along_normal = np.dot(relative_velocity, normal)
-
-                # Only apply impulse if ball is moving towards the wall
-                if vel_along_normal < 0:
-                    # Calculate impulse for bounce
-                    j = -(1 + BALL_WALL_RESTITUTION) * vel_along_normal
-                    impulse = j * normal
-                    ball.velocity += impulse # Mass is 1.0
-
-                    # 3. Apply Friction
-                    tangent = np.array([-normal[1], normal[0]])
-                    vel_along_tangent = np.dot(relative_velocity, tangent)
-                    
-                    # Friction impulse (dynamic friction)
-                    friction_impulse_magnitude = -vel_along_tangent * WALL_FRICTION_COEFF
-                    friction_impulse = np.clip(friction_impulse_magnitude, -abs(j * WALL_FRICTION_COEFF), abs(j * WALL_FRICTION_COEFF))
-                    
-                    ball.velocity += friction_impulse * tangent
-
-                    # 4. Apply Torque from friction
-                    torque = -friction_impulse * ball.radius
-                    ball.angular_velocity += torque / ball.inertia
-
-
-    def _handle_ball_collisions(self, b1: Ball, b2: Ball):
-        """Detects and resolves collisions between two balls."""
-        collision_vec = b1.position - b2.position
-        distance = np.linalg.norm(collision_vec)
-
-        if distance < b1.radius + b2.radius:
-            # --- Collision Detected ---
+            # Closest point on edge
+            closest_point = p1 + edge_dir * projection
             
-            # 1. Resolve Overlap
-            normal = collision_vec / distance
-            overlap = (b1.radius + b2.radius) - distance
-            b1.position += normal * overlap / 2
-            b2.position -= normal * overlap / 2
-
-            # 2. Calculate Collision Response (Bounce)
-            relative_velocity = b1.velocity - b2.velocity
-            vel_along_normal = np.dot(relative_velocity, normal)
+            # Distance from ball to edge
+            distance = (ball.position - closest_point).length()
             
-            # Only apply impulse if balls are moving towards each other
-            if vel_along_normal < 0:
-                j = -(1 + BALL_BALL_RESTITUTION) * vel_along_normal
-                j /= (1/b1.mass + 1/b2.mass) # Both masses are 1.0, so this is j/2
-                
-                impulse = j * normal
-                b1.velocity += impulse / b1.mass
-                b2.velocity -= impulse / b2.mass
+            if distance <= BALL_RADIUS:
+                normal = (ball.position - closest_point).normalize()
+                return (True, normal, closest_point)
+        
+        return (False, Vector2(0, 0), Vector2(0, 0))
+    
+    def update(self, dt: float):
+        self.rotation += HEPTAGON_ROTATION_SPEED * dt
+    
+    def draw(self, canvas: tk.Canvas):
+        vertices = self.get_vertices()
+        points = []
+        for v in vertices:
+            points.extend([v.x, v.y])
+        
+        canvas.create_polygon(points, fill="", outline="black", width=3)
 
-                # 3. Apply Friction (simplified model)
-                tangent = np.array([-normal[1], normal[0]])
-                vel_along_tangent = np.dot(relative_velocity, tangent)
-                
-                friction_impulse_magnitude = -vel_along_tangent * BALL_FRICTION_COEFF
-                friction_impulse = np.clip(friction_impulse_magnitude, -abs(j * BALL_FRICTION_COEFF), abs(j * BALL_FRICTION_COEFF))
-                
-                # Apply tangential impulse
-                b1.velocity += friction_impulse * tangent / b1.mass
-                b2.velocity -= friction_impulse * tangent / b2.mass
-                
-                # 4. Apply Torque from friction
-                torque = -friction_impulse * b1.radius
-                b1.angular_velocity += torque / b1.inertia
-                b2.angular_velocity -= torque / b2.inertia
-
-
-    def _draw_heptagon(self):
-        """Draws or moves the heptagon on the canvas."""
-        flat_coords = [coord for vertex in self.heptagon_vertices for coord in vertex]
-        if self.heptagon_canvas_id:
-            self.canvas.coords(self.heptagon_canvas_id, flat_coords)
-        else:
-            self.heptagon_canvas_id = self.canvas.create_polygon(
-                flat_coords, 
-                fill='', 
-                outline=HEPTAGON_LINE_COLOR, 
-                width=HEPTAGON_LINE_WIDTH
+class Simulation:
+    def __init__(self, root: tk.Tk):
+        self.root = root
+        self.canvas = tk.Canvas(root, width=800, height=600, bg="white")
+        self.canvas.pack()
+        
+        self.center = Vector2(400, 300)
+        self.heptagon = Heptagon(self.center, HEPTAGON_RADIUS)
+        
+        self.balls = []
+        for i in range(NUM_BALLS):
+            ball = Ball(
+                i+1,
+                COLORS[i],
+                Vector2(self.center.x, self.center.y)
             )
-
-    def _create_ball_canvas_objects(self):
-        """Creates the initial circle and text objects for each ball."""
+            self.balls.append(ball)
+        
+        self.last_time = 0
+        self.running = True
+        
+        self.root.after(1000//FPS, self.update)
+    
+    def check_ball_collision(self, ball1: Ball, ball2: Ball) -> bool:
+        distance = (ball1.position - ball2.position).length()
+        return distance < 2 * BALL_RADIUS
+    
+    def resolve_ball_collision(self, ball1: Ball, ball2: Ball):
+        # Vector between centers
+        delta = ball2.position - ball1.position
+        distance = delta.length()
+        
+        if distance == 0:
+            return
+        
+        # Normal direction
+        normal = delta.normalize()
+        
+        # Separate balls
+        overlap = 2 * BALL_RADIUS - distance
+        separation = normal * (overlap / 2)
+        ball1.position = ball1.position - separation
+        ball2.position = ball2.position + separation
+        
+        # Relative velocity
+        v_rel = ball2.velocity - ball1.velocity
+        
+        # Only resolve if balls are moving towards each other
+        if v_rel.dot(normal) > 0:
+            return
+        
+        # Calculate impulse
+        impulse = 2 * v_rel.dot(normal) / 2  # Assuming equal mass
+        
+        # Apply impulse
+        ball1.velocity = ball1.velocity + normal * impulse * COLLISION_DAMPING
+        ball2.velocity = ball2.velocity - normal * impulse * COLLISION_DAMPING
+        
+        # Transfer some angular momentum
+        avg_angular = (ball1.angular_velocity + ball2.angular_velocity) / 2
+        ball1.angular_velocity = avg_angular * ANGULAR_FRICTION
+        ball2.angular_velocity = avg_angular * ANGULAR_FRICTION
+    
+    def update(self):
+        current_time = self.root.tk.call('after', 'info')
+        if self.last_time == 0:
+            self.last_time = current_time
+            self.root.after(1000//FPS, self.update)
+            return
+        
+        dt = 1/FPS
+        
+        # Update heptagon
+        self.heptagon.update(dt)
+        
+        # Update balls
         for ball in self.balls:
-            x0, y0 = ball.position - ball.radius
-            x1, y1 = ball.position + ball.radius
-            ball.canvas_id = self.canvas.create_oval(x0, y0, x1, y1, fill=ball.color, outline='')
-            ball.text_id = self.canvas.create_text(
-                ball.position[0], ball.position[1],
-                text=str(ball.number),
-                font=('Helvetica', '12', 'bold'),
-                fill='black'
-            )
-
-    def _update_graphics(self):
-        """Updates the positions and rotations of all objects on the canvas."""
-        self._draw_heptagon()
-        for ball in self.balls:
-            x0, y0 = ball.position - ball.radius
-            x1, y1 = ball.position + ball.radius
-            self.canvas.coords(ball.canvas_id, x0, y0, x1, y1)
+            ball.update(dt)
             
-            # Update text position and rotation
-            self.canvas.coords(ball.text_id, ball.position[0], ball.position[1])
-            # Convert angle from radians to degrees for tkinter
-            self.canvas.itemconfig(ball.text_id, angle=-math.degrees(ball.angle))
-
-    def animate(self):
-        """The main loop of the simulation."""
-        try:
-            self._update_physics()
-            self._update_graphics()
-            self.root.after(UPDATE_DELAY_MS, self.animate)
-        except tk.TclError:
-            # Handle the case where the window is closed
-            print("Simulation window closed.")
-            sys.exit(0)
-
-# --- Main Execution ---
+            # Check collision with heptagon
+            collision, normal, contact_point = self.heptagon.check_collision(ball)
+            if collision:
+                # Reflect velocity
+                dot_product = ball.velocity.dot(normal)
+                ball.velocity = ball.velocity - normal * (2 * dot_product) * BOUNCE_DAMPING
+                
+                # Limit bounce height (not exceeding heptagon radius)
+                max_bounce_speed = math.sqrt(2 * GRAVITY * (HEPTAGON_RADIUS - BALL_RADIUS))
+                speed = ball.velocity.length()
+                if speed > max_bounce_speed:
+                    ball.velocity = ball.velocity.normalize() * max_bounce_speed
+                
+                # Add some rotation from collision
+                ball.angular_velocity += random.uniform(-10, 10)
+        
+        # Check ball-to-ball collisions
+        for i in range(len(self.balls)):
+            for j in range(i+1, len(self.balls)):
+                if self.check_ball_collision(self.balls[i], self.balls[j]):
+                    self.resolve_ball_collision(self.balls[i], self.balls[j])
+        
+        # Draw everything
+        self.canvas.delete("all")
+        self.heptagon.draw(self.canvas)
+        for ball in self.balls:
+            ball.draw(self.canvas)
+        
+        self.root.after(1000//FPS, self.update)
 
 if __name__ == "__main__":
-    main_window = tk.Tk()
-    simulation = HeptagonBounceSimulation(main_window)
-    main_window.mainloop()
+    root = tk.Tk()
+    root.title("Bouncing Balls in Spinning Heptagon")
+    sim = Simulation(root)
+    root.mainloop()
