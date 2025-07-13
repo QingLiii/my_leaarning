@@ -7,10 +7,49 @@ wheels/
 
 # Virtual environments
 .venv
+venv/
+env/
+.env
 
-# Image files
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Medical image datasets - DO NOT UPLOAD LARGE DATASETS!
+datasets/iu_xray/images/
+datasets/mimic-cxr-dataset/mimic-cxr-reports/
+datasets/mimic-cxr-dataset/official_data_iccv_final/
+datasets/*/images/
+datasets/*/dicom/
+datasets/*/dicoms/
+
+# Common medical image formats
+*.dcm
+*.dicom
+*.nii
+*.nii.gz
+*.mha
+*.mhd
+
+# Common image files
 *.jpg
 *.jpeg
+*.png
 *.gif
 *.bmp
 *.tiff
@@ -18,3 +57,33 @@ wheels/
 *.svg
 *.webp
 *.ico
+
+# Model checkpoints and weights (usually large files)
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.hdf5
+checkpoints/
+saved_models/
+weights/
+
+# Log files
+*.log
+logs/
+tensorboard_logs/
+
+# Data files that might be large
+*.csv
+*.json
+*.txt
+*.pkl
+*.pickle
+*.npy
+*.npz
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
