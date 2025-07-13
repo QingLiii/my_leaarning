@@ -100,7 +100,7 @@ class ReportQualityEvaluator:
                     start_time = time.time()
                     
                     if model_name == 'fp16':
-                        with torch.cuda.amp.autocast():
+                        with torch.amp.autocast('cuda'):
                             generated_ids = model(image, mode='sample')
                     else:
                         generated_ids = model(image, mode='sample')

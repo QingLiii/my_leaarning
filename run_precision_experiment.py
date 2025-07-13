@@ -101,6 +101,7 @@ def create_args(precision='fp32', batch_size=12, epochs=15):
             
             # 保存路径
             self.save_dir = f'results/precision_comparison/{precision}'
+            self.record_dir = f'results/precision_comparison/{precision}'
             self.experiment_name = f'R2Gen_{precision}_precision'
             
             # 优化相关

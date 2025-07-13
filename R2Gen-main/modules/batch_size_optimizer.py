@@ -119,13 +119,13 @@ class BatchSizeOptimizer:
                 
                 # 前向传播
                 if precision == 'fp16':
-                    with torch.cuda.amp.autocast():
+                    with torch.amp.autocast('cuda'):
                         output = self.model(test_data[0], test_data[1], mode='train')
                         # 模拟损失计算
                         loss = output.mean()
                 elif precision == 'fp8':
                     # FP8支持需要特殊处理，这里先用FP16代替
-                    with torch.cuda.amp.autocast():
+                    with torch.amp.autocast('cuda'):
                         output = self.model(test_data[0], test_data[1], mode='train')
                         loss = output.mean()
                 else:  # fp32

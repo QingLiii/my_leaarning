@@ -69,7 +69,7 @@ class EnhancedTrainer(BaseTrainer):
         
         # 初始化混合精度
         if self.mixed_precision == 'fp16':
-            self.scaler = torch.cuda.amp.GradScaler()
+            self.scaler = torch.amp.GradScaler('cuda')
         
     def _train_epoch(self, epoch):
         train_loss = 0
@@ -171,7 +171,7 @@ class MemoryOptimizer:
 ```python
 # experiments/precision_study.py
 import torch
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler
 
 class PrecisionExperiment:
     def __init__(self, base_args):

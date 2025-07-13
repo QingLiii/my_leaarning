@@ -57,7 +57,7 @@ class EnhancedTrainer(BaseTrainer):
         # 混合精度设置
         self.use_amp = self.mixed_precision in ['fp16', 'fp8']
         if self.use_amp:
-            self.scaler = torch.cuda.amp.GradScaler()
+            self.scaler = torch.amp.GradScaler('cuda')
             print(f"✅ 启用混合精度训练: {self.mixed_precision}")
         
         # 性能统计
@@ -177,13 +177,13 @@ class EnhancedTrainer(BaseTrainer):
     def _forward_step(self, images, reports_ids, reports_masks):
         """前向传播步骤"""
         if self.use_amp:
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast('cuda'):
                 output = self.model(images, reports_ids, mode='train')
                 loss = self.criterion(output, reports_ids, reports_masks)
         else:
             output = self.model(images, reports_ids, mode='train')
             loss = self.criterion(output, reports_ids, reports_masks)
-        
+
         return loss
     
     def _backward_step(self, loss):
@@ -291,7 +291,7 @@ class EnhancedTrainer(BaseTrainer):
                 
                 # 前向传播
                 if self.use_amp:
-                    with torch.cuda.amp.autocast():
+                    with torch.amp.autocast('cuda'):
                         output = self.model(images, reports_ids, mode='train')
                         loss = self.criterion(output, reports_ids, reports_masks)
                 else:
@@ -344,34 +344,45 @@ class EnhancedTrainer(BaseTrainer):
         print("🚀 开始增强版训练...")
         
         not_improved_count = 0
+        validate_every = getattr(self.args, 'validate_every', 1)  # 默认每个epoch验证
+
         for epoch in range(self.start_epoch, self.epochs + 1):
             # 训练一个epoch
             result = self._train_epoch(epoch)
-            
-            # 验证
-            val_log = self._evaluate(self.val_dataloader, epoch, 'val')
-            result.update(**{'val_' + k: v for k, v in val_log.items()})
-            
-            # 测试
-            test_log = self._evaluate(self.test_dataloader, epoch, 'test')
-            result.update(**{'test_' + k: v for k, v in test_log.items()})
-            
+
+            # 只在指定的epoch进行验证
+            if epoch % validate_every == 0 or epoch == self.epochs:
+                print(f"📊 Epoch {epoch}: 开始验证...")
+
+                # 验证
+                val_log = self._evaluate(self.val_dataloader, epoch, 'val')
+                result.update(**{'val_' + k: v for k, v in val_log.items()})
+
+                # 测试
+                test_log = self._evaluate(self.test_dataloader, epoch, 'test')
+                result.update(**{'test_' + k: v for k, v in test_log.items()})
+
+                # 记录最佳结果
+                log = {'epoch': epoch}
+                log.update(result)
+                self._record_best(log)
+
+                # 打印结果
+                for key, value in log.items():
+                    print('\t{:15s}: {}'.format(str(key), value))
+            else:
+                # 只训练，不验证
+                train_loss = result.get('train_loss', result.get('loss', 0))
+                log = {'epoch': epoch, 'train_loss': train_loss}
+                print(f"\tEpoch {epoch}: train_loss = {train_loss:.6f}")
+
             # 学习率调度
             if self.lr_scheduler is not None:
                 self.lr_scheduler.step()
             
-            # 记录最佳结果
-            log = {'epoch': epoch}
-            log.update(result)
-            self._record_best(log)
-            
-            # 打印结果
-            for key, value in log.items():
-                print('\t{:15s}: {}'.format(str(key), value))
-            
-            # 早停检查
+            # 早停检查（只在验证epoch进行）
             best = False
-            if self.mnt_mode != 'off':
+            if (epoch % validate_every == 0 or epoch == self.epochs) and self.mnt_mode != 'off':
                 try:
                     improved = (self.mnt_mode == 'min' and log[self.mnt_metric] <= self.mnt_best) or \
                               (self.mnt_mode == 'max' and log[self.mnt_metric] >= self.mnt_best)
@@ -379,15 +390,16 @@ class EnhancedTrainer(BaseTrainer):
                     print("Warning: Metric '{}' is not found. Model performance monitoring is disabled.".format(self.mnt_metric))
                     self.mnt_mode = 'off'
                     improved = False
-                
+
                 if improved:
                     self.mnt_best = log[self.mnt_metric]
                     not_improved_count = 0
                     best = True
                 else:
                     not_improved_count += 1
-                
-                if not_improved_count > self.early_stop:
+
+                # 如果不是每个epoch验证，则禁用早停
+                if validate_every == 1 and not_improved_count > self.early_stop:
                     print("Validation performance didn't improve for {} epochs. Training stops.".format(self.early_stop))
                     break
             

@@ -109,7 +109,7 @@ def test_batch_size_optimization():
             start_time = time.time()
             model.train()
             
-            with torch.cuda.amp.autocast():  # 使用FP16测试
+            with torch.amp.autocast('cuda'):  # 使用FP16测试
                 output = model(images, reports_ids, mode='train')
                 loss = output.mean()
             
