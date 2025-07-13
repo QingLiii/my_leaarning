@@ -301,9 +301,25 @@ class EnhancedTrainer(BaseTrainer):
                 val_loss += loss.item()
                 
                 # 生成报告用于评估
-                reports = self.model(images, mode='sample')
-                val_res.extend(reports)
-                val_gts.extend(reports_ids.cpu().numpy())
+                generated_ids = self.model(images, mode='sample')
+
+                # 创建tokenizer用于解码
+                from modules.tokenizers import Tokenizer
+                tokenizer = Tokenizer(self.args)
+
+                # 解码生成的报告
+                if isinstance(generated_ids, torch.Tensor):
+                    # 如果返回的是tensor，解码每个序列
+                    generated_reports = tokenizer.decode_batch(generated_ids.cpu().numpy())
+                else:
+                    # 如果返回的已经是文本列表
+                    generated_reports = generated_ids
+
+                val_res.extend(generated_reports)
+
+                # 解码ground truth报告
+                gt_reports = tokenizer.decode_batch(reports_ids.cpu().numpy())
+                val_gts.extend(gt_reports)
         
         # 计算评估指标
         val_met = self.metric_ftns({i: [gt] for i, gt in enumerate(val_gts)},

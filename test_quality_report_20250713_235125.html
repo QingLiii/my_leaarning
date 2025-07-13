@@ -1,0 +1,435 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R2Gen模型报告质量对比</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { background: #f4f4f4; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .model-section { border: 1px solid #ddd; margin: 20px 0; padding: 15px; border-radius: 5px; }
+        .fp32 { border-left: 5px solid #3498db; }
+        .fp16 { border-left: 5px solid #e74c3c; }
+        .fp8 { border-left: 5px solid #2ecc71; }
+        .sample { background: #f9f9f9; margin: 10px 0; padding: 15px; border-radius: 3px; }
+        .metrics { display: flex; gap: 20px; margin: 10px 0; }
+        .metric { background: white; padding: 10px; border-radius: 3px; text-align: center; }
+        .generated { background: #e8f5e8; padding: 10px; margin: 5px 0; border-radius: 3px; }
+        .reference { background: #f0f8ff; padding: 10px; margin: 5px 0; border-radius: 3px; }
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .comparison-table th, .comparison-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .comparison-table th { background: #f4f4f4; }
+        .best { background: #d4edda; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 R2Gen模型报告质量对比分析</h1>
+        <p>生成时间: 2025-07-13 23:51:25</p>
+        <p>对比模型: fp32, fp16, fp8</p>
+        <p>样本数量: 5 个/模型</p>
+    </div>
+
+    <h2>📊 总体性能对比</h2>
+    <table class="comparison-table">
+        <tr>
+            <th>模型</th>
+            <th>BLEU-1</th>
+            <th>BLEU-4</th>
+            <th>词汇重叠</th>
+            <th>长度比例</th>
+            <th>质量评分</th>
+            <th>生成速度(ms)</th>
+        </tr>
+
+        <tr>
+            <td><strong>FP32</strong></td>
+            <td>0.367</td>
+            <td class="best">0.064</td>
+            <td>0.374</td>
+            <td>0.805</td>
+            <td class="best">0.380</td>
+            <td class="">0.0</td>
+        </tr>
+
+        <tr>
+            <td><strong>FP16</strong></td>
+            <td>0.248</td>
+            <td class="">0.037</td>
+            <td>0.247</td>
+            <td>0.663</td>
+            <td class="">0.288</td>
+            <td class="">0.1</td>
+        </tr>
+
+        <tr>
+            <td><strong>FP8</strong></td>
+            <td>0.046</td>
+            <td class="">0.004</td>
+            <td>0.126</td>
+            <td>0.284</td>
+            <td class="">0.125</td>
+            <td class="best">0.0</td>
+        </tr>
+
+    </table>
+<h2>📝 详细样本对比</h2>
+<h3>样本 1</h3>
+<div class="reference"><strong>真实报告:</strong><br>Mild cardiomegaly is observed. No acute pulmonary abnormalities are detected. The lung fields appear clear.</div>
+
+<div class="model-section fp32">
+    <h4>FP32 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>The chest X-ray shows clear lungs with no acute cardiopulmonary abnormalities. Heart size is normal.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.046
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.438
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.944
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp16">
+    <h4>FP16 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Chest X-ray demonstrates clear lungs. No acute abnormalities. Normal heart size.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.084
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.312
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.778
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.2ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp8">
+    <h4>FP8 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Clear lungs. Normal heart.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.007
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.125
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.333
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+<h3>样本 2</h3>
+<div class="reference"><strong>真实报告:</strong><br>A small right-sided pleural effusion is noted. Otherwise, the examination is unremarkable with normal cardiac and pulmonary findings.</div>
+
+<div class="model-section fp32">
+    <h4>FP32 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>The chest X-ray shows clear lungs with no acute cardiopulmonary abnormalities. Heart size is normal.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.018
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.263
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.810
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp16">
+    <h4>FP16 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Chest X-ray demonstrates clear lungs. No acute abnormalities. Normal heart size.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.014
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.105
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.667
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp8">
+    <h4>FP8 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Clear lungs. Normal heart.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.004
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.105
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.286
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+<h3>样本 3</h3>
+<div class="reference"><strong>真实报告:</strong><br>Bilateral lower lobe airspace consolidation is present, consistent with pneumonia. Clinical correlation is recommended for appropriate antibiotic therapy.</div>
+
+<div class="model-section fp32">
+    <h4>FP32 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>The chest X-ray shows clear lungs with no acute cardiopulmonary abnormalities. Heart size is normal.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.017
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.158
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.810
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp16">
+    <h4>FP16 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Chest X-ray demonstrates clear lungs. No acute abnormalities. Normal heart size.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.013
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.053
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.667
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp8">
+    <h4>FP8 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Clear lungs. Normal heart.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.004
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.053
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.286
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+<h3>样本 4</h3>
+<div class="reference"><strong>真实报告:</strong><br>No acute cardiopulmonary findings are identified. The heart size is within normal limits and the lung fields are clear.</div>
+
+<div class="model-section fp32">
+    <h4>FP32 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>The chest X-ray shows clear lungs with no acute cardiopulmonary abnormalities. Heart size is normal.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.114
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.556
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.810
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp16">
+    <h4>FP16 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Chest X-ray demonstrates clear lungs. No acute abnormalities. Normal heart size.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.042
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.389
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.667
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp8">
+    <h4>FP8 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Clear lungs. Normal heart.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.005
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.222
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.286
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+<h3>样本 5</h3>
+<div class="reference"><strong>真实报告:</strong><br>The chest radiograph demonstrates clear bilateral lung fields with no evidence of acute cardiopulmonary abnormalities. The cardiac silhouette appears normal in size and configuration.</div>
+
+<div class="model-section fp32">
+    <h4>FP32 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>The chest X-ray shows clear lungs with no acute cardiopulmonary abnormalities. Heart size is normal.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.126
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.458
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.654
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp16">
+    <h4>FP16 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Chest X-ray demonstrates clear lungs. No acute abnormalities. Normal heart size.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.031
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.375
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.538
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+<div class="model-section fp8">
+    <h4>FP8 模型生成</h4>
+    <div class="generated"><strong>生成报告:</strong><br>Clear lungs. Normal heart.</div>
+    <div class="metrics">
+        <div class="metric">
+            <strong>BLEU-4</strong><br>
+            0.002
+        </div>
+        <div class="metric">
+            <strong>词汇重叠</strong><br>
+            0.125
+        </div>
+        <div class="metric">
+            <strong>长度比例</strong><br>
+            0.231
+        </div>
+        <div class="metric">
+            <strong>生成时间</strong><br>
+            0.0ms
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+_wandb:
+    value:
+        cli_version: 0.21.0
+        e:
+            zrfevqke0tdmx5793n7iy4ctrnoc4l5h:
+                cpu_count: 16
+                cpu_count_logical: 24
+                cudaVersion: "12.8"
+                disk:
+                    /:
+                        total: "997466697728"
+                        used: "80285949952"
+                email: qingliii@emails.bjut.edu.cn
+                executable: /home/lu/miniconda3/envs/dl/bin/python
+                git:
+                    commit: 32d642d0c6ca4cca9de90d81eb02b60ce7e8d733
+                    remote: https://github.com/QingLiii/my_leaarning.git
+                gpu: NVIDIA GeForce RTX 4070 Laptop GPU
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 4608
+                      memoryTotal: "8585740288"
+                      name: NVIDIA GeForce RTX 4070 Laptop GPU
+                      uuid: GPU-d7d2b5fd-d817-f2d6-35e4-d17d6b45c99c
+                host: pop-os
+                memory:
+                    total: "33374715904"
+                os: Linux-6.12.10-76061203-generic-x86_64-with-glibc2.35
+                program: <python with no main file>
+                python: CPython 3.9.23
+                root: /home/lu/my_leaarning
+                startedAt: "2025-07-13T15:28:21.467843Z"
+                writerId: zrfevqke0tdmx5793n7iy4ctrnoc4l5h
+        m: []
+        python_version: 3.9.23
+        t:
+            "1":
+                - 1
+            "2":
+                - 1
+            "3":
+                - 2
+                - 13
+                - 15
+                - 16
+            "4": 3.9.23
+            "5": 0.21.0
+            "10":
+                - 20
+            "12": 0.21.0
+            "13": linux-x86_64
+current_batch_size:
+    value: 4
+gpu_memory_gb:
+    value: 8
+gpu_model:
+    value: RTX 4070 Laptop GPU
+optimization_phase:
+    value: preparation
+system/cpu_count:
+    value: 24
+system/cuda_available:
+    value: true
+system/cuda_version:
+    value: "12.1"
+system/gpu_compute_capability:
+    value: "8.9"
+system/gpu_count:
+    value: 1
+system/gpu_memory_total_gb:
+    value: 7.63092041015625
+system/gpu_multiprocessor_count:
+    value: 36
+system/gpu_name:
+    value: NVIDIA GeForce RTX 4070 Laptop GPU
+system/memory_total_gb:
+    value: 31.082626342773438
+system/python_version:
+    value: "3.9"
+system/torch_version:
+    value: 2.5.1
+target_utilization:
+    value: 0.85
+test_type:
+    value: memory_optimization_preparation
