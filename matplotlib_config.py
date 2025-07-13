@@ -38,10 +38,14 @@ def setup_high_quality_plots():
     mpl.rcParams['legend.fontsize'] = 10
     mpl.rcParams['figure.titlesize'] = 16
     
-    # 设置字体族（优先使用无衬线字体）
+    # 设置字体族（优先使用无衬线字体，支持中文）
     mpl.rcParams['font.family'] = 'sans-serif'
-    mpl.rcParams['font.sans-serif'] = ['Arial', 'DejaVu Sans', 'Liberation Sans', 
-                                       'Bitstream Vera Sans', 'sans-serif']
+    mpl.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'SimHei', 'Microsoft YaHei', 'Arial Unicode MS',
+                                       'PingFang SC', 'DejaVu Sans',
+                                       'Arial', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif']
+
+    # 解决中文显示问题
+    mpl.rcParams['axes.unicode_minus'] = False  # 正确显示负号
     
     # ========== 线条和标记设置 ==========
     mpl.rcParams['lines.linewidth'] = 1.5
@@ -55,7 +59,12 @@ def setup_high_quality_plots():
     mpl.rcParams['axes.spines.top'] = False
     mpl.rcParams['axes.spines.right'] = False
     mpl.rcParams['axes.grid'] = True
-    mpl.rcParams['axes.grid.alpha'] = 0.3
+    # 注意：某些matplotlib版本不支持axes.grid.alpha参数
+    try:
+        mpl.rcParams['axes.grid.alpha'] = 0.3
+    except KeyError:
+        # 使用替代方法设置网格透明度
+        mpl.rcParams['grid.alpha'] = 0.3
     
     # ========== 刻度设置 ==========
     mpl.rcParams['xtick.direction'] = 'out'

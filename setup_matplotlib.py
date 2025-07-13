@@ -27,10 +27,13 @@ savefig.facecolor: white
 savefig.edgecolor: none
 savefig.transparent: False
 
-# 字体设置
+# 字体设置（支持中文）
 font.size: 12
 font.family: sans-serif
-font.sans-serif: Arial, DejaVu Sans, Liberation Sans, Bitstream Vera Sans, sans-serif
+font.sans-serif: SimHei, Microsoft YaHei, Arial Unicode MS, PingFang SC, DejaVu Sans, WenQuanYi Micro Hei, Arial, Liberation Sans, Bitstream Vera Sans, sans-serif
+
+# 中文显示设置
+axes.unicode_minus: False
 
 # 标题和标签字体大小
 axes.titlesize: 14
@@ -111,8 +114,11 @@ savefig.format: png
 savefig.bbox: tight
 savefig.pad_inches: 0.1
 font.size: 12
+font.family: sans-serif
+font.sans-serif: SimHei, Microsoft YaHei, Arial Unicode MS, PingFang SC, DejaVu Sans, WenQuanYi Micro Hei, Arial, Liberation Sans, Bitstream Vera Sans, sans-serif
 axes.titlesize: 14
 axes.labelsize: 12
+axes.unicode_minus: False
 """
     
     local_config = Path('./matplotlibrc')
