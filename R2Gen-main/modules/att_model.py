@@ -56,11 +56,11 @@ class AttModel(CaptionModel):
         self.embed = lambda x: x
         self.fc_embed = lambda x: x
         self.att_embed = nn.Sequential(*(
-                ((nn.BatchNorm1d(self.att_feat_size),) if self.use_bn else ()) +
+                ((FixedBatchNorm1dWrapper(self.att_feat_size),) if self.use_bn else ()) +
                 (nn.Linear(self.att_feat_size, self.input_encoding_size),
                  nn.ReLU(),
                  nn.Dropout(self.drop_prob_lm)) +
-                ((nn.BatchNorm1d(self.input_encoding_size),) if self.use_bn == 2 else ())))
+                ((FixedBatchNorm1dWrapper(self.input_encoding_size),) if self.use_bn == 2 else ())))
 
     def clip_att(self, att_feats, att_masks):
         # Clip the length of att_masks and att_feats to the maximum length
@@ -317,3 +317,30 @@ class AttModel(CaptionModel):
         return torch.stack(seq_table, 1).reshape(batch_size * group_size, -1), torch.stack(seqLogprobs_table,
                                                                                            1).reshape(
             batch_size * group_size, -1)
+class FixedBatchNorm1dWrapper(nn.Module):
+    """
+    修复的BatchNorm1d包装器
+    自动处理输入格式转换，支持混合精度训练
+    """
+    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True, track_running_stats=True):
+        super().__init__()
+        self.bn = nn.BatchNorm1d(num_features, eps, momentum, affine, track_running_stats)
+        
+    def forward(self, x):
+        """
+        自动处理输入格式
+        输入: (batch, seq_len, features) 或 (batch, features)
+        输出: 与输入相同的格式
+        """
+        if len(x.shape) == 3:
+            # (batch, seq_len, features) -> (batch, features, seq_len)
+            x = x.transpose(1, 2)
+            x = self.bn(x)
+            # (batch, features, seq_len) -> (batch, seq_len, features)
+            x = x.transpose(1, 2)
+        else:
+            # (batch, features) - 直接处理
+            x = self.bn(x)
+        return x
+
+

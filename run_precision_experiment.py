@@ -49,7 +49,7 @@ def create_args(precision='fp32', batch_size=12, epochs=15):
             self.monitor_metric = 'BLEU_4'
             self.early_stop = epochs + 10  # 禁用早停
             self.resume = None
-            self.validate_every = epochs  # 只在最后验证
+            self.validate_every = 1  # 每个epoch验证
             
             # 优化器相关
             self.optim = 'Adam'
@@ -58,10 +58,10 @@ def create_args(precision='fp32', batch_size=12, epochs=15):
             self.weight_decay = 0
             self.amsgrad = True
             
-            # 学习率调度
+            # 学习率调度 - 按论文要求每epoch衰减0.8
             self.lr_scheduler = 'StepLR'
-            self.step_size = 50
-            self.gamma = 0.1
+            self.step_size = 1  # 每个epoch衰减
+            self.gamma = 0.8    # 衰减因子0.8
             
             # 模型相关
             self.d_model = 512
@@ -151,6 +151,9 @@ def run_single_precision_training(precision, batch_size, epochs=15):
     
     # 初始化WandB
     print(f"   📈 初始化WandB监控...")
+    # 设置API key
+    import os
+    os.environ['WANDB_API_KEY'] = '68c9ce2a167992d06678c4fdc0d1075b5dfff922'
     wandb_logger = WandBLogger(project_name="R2Gen-Precision-Comparison")
     
     wandb_config = {

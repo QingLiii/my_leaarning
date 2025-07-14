@@ -78,14 +78,19 @@ class Tokenizer(object):
         return ids
 
     def decode(self, ids):
+        """
+        修复版本：正确处理BOS/EOS token
+
+        原问题：遇到第一个0（BOS token）就停止，导致返回空字符串
+        修复：跳过BOS/EOS token，只在遇到padding时停止
+        """
         txt = ''
         for i, idx in enumerate(ids):
-            if idx > 0:
-                if i >= 1:
+            if idx > 0:  # 跳过BOS/EOS/padding (idx=0)
+                if len(txt) > 0:  # 如果已有内容，添加空格
                     txt += ' '
                 txt += self.idx2token[idx]
-            else:
-                break
+            # 注意：不再break，继续处理后续token
         return txt
 
     def decode_batch(self, ids_batch):

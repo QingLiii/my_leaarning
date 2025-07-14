@@ -1,0 +1,88 @@
+_wandb:
+    value:
+        cli_version: 0.21.0
+        e:
+            ayw0cc0x5w247gh7imc4ab0wymocvzj0:
+                args:
+                    - --precision
+                    - fp32
+                    - --epochs
+                    - "15"
+                codePath: mixed_precision_trainer_fixed.py
+                codePathLocal: mixed_precision_trainer_fixed.py
+                email: qingliii@emails.bjut.edu.cn
+                executable: /home/lu/miniconda3/envs/dl/bin/python
+                git:
+                    commit: 1bab4157f42768027fccf9eae7a1757ab7548060
+                    remote: https://github.com/QingLiii/my_leaarning.git
+                host: pop-os
+                os: Linux-6.12.10-76061203-generic-x86_64-with-glibc2.35
+                program: /home/lu/my_leaarning/mixed_precision_trainer_fixed.py
+                python: CPython 3.9.23
+                root: /home/lu/my_leaarning
+                startedAt: "2025-07-14T06:22:29.271551Z"
+                writerId: ayw0cc0x5w247gh7imc4ab0wymocvzj0
+        m: []
+        python_version: 3.9.23
+        t:
+            "1":
+                - 1
+                - 41
+            "2":
+                - 1
+                - 41
+            "3":
+                - 2
+                - 13
+                - 15
+                - 16
+            "4": 3.9.23
+            "5": 0.21.0
+            "10":
+                - 20
+            "12": 0.21.0
+            "13": linux-x86_64
+batch_size:
+    value: 12
+dataset:
+    value: iu_xray
+epochs:
+    value: 15
+experiment_type:
+    value: mixed_precision_fixed
+learning_rate_ed:
+    value: 0.0001
+learning_rate_ve:
+    value: 5e-05
+lr_decay_factor:
+    value: 0.8
+lr_scheduler:
+    value: StepLR
+mixed_precision:
+    value: false
+model:
+    value: R2Gen_Fixed
+precision:
+    value: fp32
+system/cpu_count:
+    value: 24
+system/cuda_available:
+    value: true
+system/cuda_version:
+    value: "12.1"
+system/gpu_compute_capability:
+    value: "8.9"
+system/gpu_count:
+    value: 1
+system/gpu_memory_total_gb:
+    value: 7.63092041015625
+system/gpu_multiprocessor_count:
+    value: 36
+system/gpu_name:
+    value: NVIDIA GeForce RTX 4070 Laptop GPU
+system/memory_total_gb:
+    value: 31.082622528076172
+system/python_version:
+    value: "3.9"
+system/torch_version:
+    value: 2.5.1
